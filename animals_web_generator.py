@@ -7,19 +7,43 @@ def load_data(file_path):
         return json.load(handle)
 
 
-def main():
-    animals_data = load_data('animals_data.json')
-    for animal in animals_data:
+def convert_to_animals_data(json_content):
+    """
+    Extracting animal details from the given json content.
+    """
+    output = ''
+    for animal in json_content:
         if 'name' in animal:
-            print(f"Name: {animal['name']}")
+            output += f"Name: {animal['name']}\n"
         if 'characteristics' in animal and 'diet' in animal['characteristics']:
-            print(f"Diet: {animal['characteristics']['diet']}")
+            output += f"Diet: {animal['characteristics']['diet']}\n"
         if 'locations' in animal and len(animal['locations']) > 0:
-            print(f"Location: {animal['locations'][0]}")
+            output += f"Location: {animal['locations'][0]}\n"
         if 'characteristics' in animal and 'type' in animal['characteristics']:
-            print(f"Type: {animal['characteristics']['type']}")
+            output += f"Type: {animal['characteristics']['type']}\n"
+        output += "\n"
+    return output
 
-        print()
+
+def replace_animal_info():
+    """
+     Replace the HTML template __REPLACE_ANIMALS_INFO__ with the result from animals data.
+    """
+    animals_data = load_data('animals_data.json')
+    actual_animal_data = convert_to_animals_data(animals_data)
+    content_to_be_replaced = "__REPLACE_ANIMALS_INFO__"
+    with open("animals_template.html", "r") as filehandle:
+        template_content = filehandle.read()
+    modified_content = template_content.replace(content_to_be_replaced, actual_animal_data)
+    with open("animals.html", "w") as fileobject:
+        fileobject.write(modified_content)
+
+
+def main():
+    """
+    Main Function
+    """
+    replace_animal_info()
 
 
 if __name__ == "__main__":
