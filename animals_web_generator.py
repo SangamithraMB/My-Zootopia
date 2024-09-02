@@ -19,7 +19,7 @@ def fetch_animal_data(animal_name):
 
     if response.status_code == 200:
         data = response.json()
-        print("API Response:", data)  # Print the response for debugging
+        print("API Response:", data)
         return data
     else:
         raise Exception(f"Failed to fetch data: {response.status_code} - {response.text}")
@@ -82,10 +82,10 @@ def replace_animal_info(animal_name):
         output += serialize_animal(animal_obj)
 
     content_to_be_replaced = "__REPLACE_ANIMALS_INFO__"
-    with open("animals_template.html", "r") as filehandle:
+    with open("animals_template.html", "r", encoding='utf-8') as filehandle:
         template_content = filehandle.read()
     modified_content = template_content.replace(content_to_be_replaced, output)
-    with open("animals.html", "w") as fileobject:
+    with open("animals.html", "w", encoding='utf-8') as fileobject:
         fileobject.write(modified_content)
 
 
@@ -93,8 +93,12 @@ def main():
     """
     Main Function
     """
-    animal_name = "Fox"
+    animal_name = input("Enter the name of an animal: ")
+    if not animal_name.strip():
+        print("Animal name cannot be empty.")
+        return
     replace_animal_info(animal_name)
+    print("Website was successfully generated to the file animals.html.")
 
 
 if __name__ == "__main__":
