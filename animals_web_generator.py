@@ -1,27 +1,4 @@
-import requests
-
-API_URL = "https://api.api-ninjas.com/v1/animals"
-API_KEY = "pWpm7irdz1ssNUHXgtKTfgzmAxSGG16oWaPI2MDL"
-
-
-def fetch_animal_data(animal_name):
-    """Fetches animal data from the API by name."""
-    headers = {
-        'X-Api-Key': API_KEY
-    }
-    params = {
-        'name': animal_name
-    }
-
-    print(f"Requesting URL: {API_URL} with params: {params}")
-
-    response = requests.get(API_URL, headers=headers, params=params)
-
-    if response.status_code == 200:
-        data = response.json()
-        return data
-    else:
-        raise Exception(f"Failed to fetch data: {response.status_code} - {response.text}")
+import data_fetcher
 
 
 def serialize_animal(animal_obj):
@@ -58,37 +35,32 @@ def serialize_animal(animal_obj):
     return output
 
 
-def get_unique_skin_types(animals_data):
-    """Extract unique skin_type values from animals data."""
-    skin_types = set()
-    for animal in animals_data:
-        if 'characteristics' in animal and 'skin_type' in animal['characteristics']:
-            skin_types.add(animal['characteristics']['skin_type'])
-    return skin_types
-
-
 def replace_animal_info(animal_name):
     """
-    Replace the HTML template __REPLACE_ANIMALS_INFO__ with the result from the animal data fetched from the API.
+    Replaces the HTML template __REPLACE_ANIMALS_INFO__ with the result from the animal data fetched from the API.
+
+    Args:
+    animal_name (str): The name of the animal to fetch data for.
     """
-    animals_data = fetch_animal_data(animal_name)
+    try:
+        animals_data = data_fetcher.fetch_data(animal_name)
 
-    if not isinstance(animals_data, list):
-        raise Exception("Unexpected API response format: Expected a list of animals.")
+        if not animals_data:
+            output = f'<h2>No such animal found: "{animal_name}".</h2>'
+        else:
+            output = ''
+            for animal_obj in animals_data:
+                output += serialize_animal(animal_obj)
 
-    if len(animals_data) == 0:
-        output = f'<h2>No such animal found: "{animal_name}".</h2>'
-    else:
-        output = ''
-        for animal_obj in animals_data:
-            output += serialize_animal(animal_obj)
+        content_to_be_replaced = "__REPLACE_ANIMALS_INFO__"
+        with open("animals_template.html", "r", encoding='utf-8') as filehandle:
+            template_content = filehandle.read()
+        modified_content = template_content.replace(content_to_be_replaced, output)
+        with open("animals.html", "w", encoding='utf-8') as fileobject:
+            fileobject.write(modified_content)
 
-    content_to_be_replaced = "__REPLACE_ANIMALS_INFO__"
-    with open("animals_template.html", "r", encoding='utf-8') as filehandle:
-        template_content = filehandle.read()
-    modified_content = template_content.replace(content_to_be_replaced, output)
-    with open("animals.html", "w", encoding='utf-8') as fileobject:
-        fileobject.write(modified_content)
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 
 def main():
@@ -96,9 +68,6 @@ def main():
     Main Function
     """
     animal_name = input("Enter the name of an animal: ")
-    if not animal_name.strip():
-        print("Animal name cannot be empty.")
-        return
     replace_animal_info(animal_name)
     print("Website was successfully generated to the file animals.html.")
 
