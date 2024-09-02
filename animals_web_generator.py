@@ -19,7 +19,6 @@ def fetch_animal_data(animal_name):
 
     if response.status_code == 200:
         data = response.json()
-        print("API Response:", data)
         return data
     else:
         raise Exception(f"Failed to fetch data: {response.status_code} - {response.text}")
@@ -77,9 +76,12 @@ def replace_animal_info(animal_name):
     if not isinstance(animals_data, list):
         raise Exception("Unexpected API response format: Expected a list of animals.")
 
-    output = ''
-    for animal_obj in animals_data:
-        output += serialize_animal(animal_obj)
+    if len(animals_data) == 0:
+        output = f'<h2>No such animal found: "{animal_name}".</h2>'
+    else:
+        output = ''
+        for animal_obj in animals_data:
+            output += serialize_animal(animal_obj)
 
     content_to_be_replaced = "__REPLACE_ANIMALS_INFO__"
     with open("animals_template.html", "r", encoding='utf-8') as filehandle:
