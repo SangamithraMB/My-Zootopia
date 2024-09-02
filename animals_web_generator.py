@@ -1,10 +1,28 @@
-import json
+import requests
+
+API_URL = "https://api.api-ninjas.com/v1/animals"
+API_KEY = "pWpm7irdz1ssNUHXgtKTfgzmAxSGG16oWaPI2MDL"
 
 
-def load_data(file_path):
-    """ Loads a JSON file """
-    with open(file_path, "r") as handle:
-        return json.load(handle)
+def fetch_animal_data(animal_name):
+    """Fetches animal data from the API by name."""
+    headers = {
+        'X-Api-Key': API_KEY
+    }
+    params = {
+        'name': animal_name
+    }
+
+    print(f"Requesting URL: {API_URL} with params: {params}")
+
+    response = requests.get(API_URL, headers=headers, params=params)
+
+    if response.status_code == 200:
+        data = response.json()
+        print("API Response:", data)  # Print the response for debugging
+        return data
+    else:
+        raise Exception(f"Failed to fetch data: {response.status_code} - {response.text}")
 
 
 def serialize_animal(animal_obj):
@@ -50,13 +68,19 @@ def get_unique_skin_types(animals_data):
     return skin_types
 
 
-def replace_animal_info(filtered_animals):
+def replace_animal_info(animal_name):
     """
-     Replace the HTML template __REPLACE_ANIMALS_INFO__ with the result from animals data.
+    Replace the HTML template __REPLACE_ANIMALS_INFO__ with the result from the animal data fetched from the API.
     """
+    animals_data = fetch_animal_data(animal_name)
+
+    if not isinstance(animals_data, list):
+        raise Exception("Unexpected API response format: Expected a list of animals.")
+
     output = ''
-    for animals_obj in filtered_animals:
-        output += serialize_animal(animals_obj)
+    for animal_obj in animals_data:
+        output += serialize_animal(animal_obj)
+
     content_to_be_replaced = "__REPLACE_ANIMALS_INFO__"
     with open("animals_template.html", "r") as filehandle:
         template_content = filehandle.read()
@@ -69,22 +93,8 @@ def main():
     """
     Main Function
     """
-    animals_data = load_data('animals_data.json')
-
-    skin_types = get_unique_skin_types(animals_data)
-    print("Available skin types:")
-    for i, skin_type in enumerate(skin_types, 1):
-        print(f"{i}. {skin_type}")
-
-    user_choice = input("Enter the skin type you want to filter by: ").strip()
-
-    filtered_animals = [animal for animal in animals_data if
-                        'characteristics' in animal and animal['characteristics'].get('skin_type') == user_choice]
-
-    if not filtered_animals:
-        print(f"No animals found with skin type: {user_choice}")
-
-    replace_animal_info(filtered_animals)
+    animal_name = "Fox"
+    replace_animal_info(animal_name)
 
 
 if __name__ == "__main__":
